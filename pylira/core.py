@@ -177,7 +177,7 @@ class LIRADeconvolver:
             # A.S. Borlaff - NASA/Ames, Feb 16 2024. 
             # Adding a randomized temporary name to the image_trace and parameter_trace files 
             # So the do not overlap if multiple LIRAs are launched in parallel. 
-            random_code_string = join(random.choices(string.ascii_uppercase, k=10))
+            random_code_string = ''.join(random.choices(string.ascii_uppercase, k=10))
             filename_image_trace = str(os.path.join(tmpdir, "image-trace_"+ random_code_string +".txt"))
             filename_parameter_trace = str(os.path.join(tmpdir, "parameter-trace_" + random_code_string + ".txt"))
 
