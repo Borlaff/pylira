@@ -1673,7 +1673,7 @@ void bayes_image_analysis(double* outmap, double* post_mean, char* out_file_nm,
   for (cont->iter = 1; cont->iter <= cont->max_iter; cont->iter++) {
     if (verbose > 1 && (cont->iter % cont->save_thin == 0)) {
       // printf_d("ITERATION NUMBER %d.\n", cont->iter);
-      printProgress(100*iter/max_iter)
+      printProgress(100*iter/max_iter);
       fprintf(param_file, "\n%d ", cont->iter);
     }
 
