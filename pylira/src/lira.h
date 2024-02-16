@@ -1639,6 +1639,7 @@ void bayes_image_analysis(double* outmap, double* post_mean, char* out_file_nm,
                           expmapType* expmap, cntType* obs, cntType* deblur,
                           cntType* src, cntType* bkg, mrfType* mrf, msType* ms,
                           llikeType* llike, scalemodelType* bkg_scale, unsigned int random_seed) {
+    
   FILE* out_file; /* the output file */
   if (!(out_file = fopen(out_file_nm, "w"))) c_error("Could not open the OUTPUT file");
 
@@ -1673,7 +1674,8 @@ void bayes_image_analysis(double* outmap, double* post_mean, char* out_file_nm,
   for (cont->iter = 1; cont->iter <= cont->max_iter; cont->iter++) {
     if (verbose > 1 && (cont->iter % cont->save_thin == 0)) {
       // printf_d("ITERATION NUMBER %d.\n", cont->iter);
-      printProgress(cont->iter/cont->max_iter);
+      float progress_fraction = (float)cont->iter / (float)cont->max_iter;
+      printProgress(progress_fraction);
       fprintf(param_file, "\n%d ", cont->iter);
     }
 
