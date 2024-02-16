@@ -21,6 +21,18 @@
 #define PAR_NOT_SET -42
 //#define DEBUG 0
 
+// Adding a progress bar. See https://stackoverflow.com/questions/14539867/how-to-display-a-progress-indicator-in-pure-c-c-cout-printf
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
+
+void printProgress(double percentage) {
+    int val = (int) (percentage * 100);
+    int lpad = (int) (percentage * PBWIDTH);
+    int rpad = PBWIDTH - lpad;
+    printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+    fflush(stdout);
+}
+
 /***************************************************************/
 /************************* DATA STRUCTURES *********************/
 /***************************************************************/
@@ -1661,6 +1673,7 @@ void bayes_image_analysis(double* outmap, double* post_mean, char* out_file_nm,
   for (cont->iter = 1; cont->iter <= cont->max_iter; cont->iter++) {
     if (verbose > 1 && (cont->iter % cont->save_thin == 0)) {
       // printf_d("ITERATION NUMBER %d.\n", cont->iter);
+      printProgress(100*iter/max_iter)
       fprintf(param_file, "\n%d ", cont->iter);
     }
 
