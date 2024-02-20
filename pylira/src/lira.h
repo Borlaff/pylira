@@ -22,15 +22,27 @@
 //#define DEBUG 0
 
 // Adding a progress bar. See https://stackoverflow.com/questions/14539867/how-to-display-a-progress-indicator-in-pure-c-c-cout-printf
-#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-#define PBWIDTH 60
+#include <iostream>
+#include <chrono>
 
-void printProgress(double percentage) {
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 100
+
+void printProgress(double percentage, std::chrono::steady_clock::time_point start_time) {
     int val = (int) (percentage * 100);
     int lpad = (int) (percentage * PBWIDTH);
     int rpad = PBWIDTH - lpad;
-    printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-    fflush(stdout);
+    
+    auto elapsed_time = std::chrono::steady_clock::now() - start_time;
+    auto estimated_total_time = elapsed_time / percentage;
+    auto estimated_remaining_time = estimated_total_time - elapsed_time;
+
+    int hours = std::chrono::duration_cast<std::chrono::hours>(estimated_remaining_time).count();
+    int minutes = std::chrono::duration_cast<std::chrono::minutes>(estimated_remaining_time % std::chrono::hours(1)).count();
+    int seconds = std::chrono::duration_cast<std::chrono::seconds>(estimated_remaining_time % std::chrono::minutes(1)).count();
+
+    std::cout << "\r" << std::setw(3) << val << "% [" << std::string(lpad, '=') << ">" << std::string(rpad, ' ') << "] ";
+    std::cout << "Time left: " << hours << "h " << minutes << "m " << seconds << "s" << std::flush;
 }
 
 /***************************************************************/
@@ -1675,7 +1687,8 @@ void bayes_image_analysis(double* outmap, double* post_mean, char* out_file_nm,
     if (verbose > 1 && (cont->iter % cont->save_thin == 0)) {
       // printf_d("ITERATION NUMBER %d.\n", cont->iter);
       float progress_fraction = (float)cont->iter / (float)cont->max_iter;
-      printProgress(progress_fraction);
+      std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+      printProgress(progress_fraction,start_time);
       fprintf(param_file, "\n%d ", cont->iter);
     }
 
