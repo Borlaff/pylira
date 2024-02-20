@@ -34,12 +34,12 @@ void printProgress(double percentage, std::chrono::steady_clock::time_point star
     int rpad = PBWIDTH - lpad;
     
     auto elapsed_time = std::chrono::steady_clock::now() - start_time;
-    auto estimated_total_time = elapsed_time / percentage;
+    auto estimated_total_time = std::chrono::duration<double>(elapsed_time) / percentage;
     auto estimated_remaining_time = estimated_total_time - elapsed_time;
 
     int hours = std::chrono::duration_cast<std::chrono::hours>(estimated_remaining_time).count();
-    int minutes = std::chrono::duration_cast<std::chrono::minutes>(estimated_remaining_time % std::chrono::hours(1)).count();
-    int seconds = std::chrono::duration_cast<std::chrono::seconds>(estimated_remaining_time % std::chrono::minutes(1)).count();
+    int minutes = std::chrono::duration_cast<std::chrono::minutes>(estimated_remaining_time).count() % 60;
+    int seconds = std::chrono::duration_cast<std::chrono::seconds>(estimated_remaining_time).count() % 60;
 
     std::cout << "\r" << std::setw(3) << val << "% [" << std::string(lpad, '=') << ">" << std::string(rpad, ' ') << "] ";
     std::cout << "Time left: " << hours << "h " << minutes << "m " << seconds << "s" << std::flush;
