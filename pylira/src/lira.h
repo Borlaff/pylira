@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <time.h>
 #include <iostream>
-
+#include <iomanip> // Include for std::setw
 #define verbose 3         /* interger 0 to 10, higher more output to screen */
 #define convg_em 1e-6     /* convergence criterion for EM */
 #define convg_nr 1e-8     /* convergence criterion for Newton-Raphson */
