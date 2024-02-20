@@ -174,7 +174,7 @@ class LIRADeconvolver:
 
         random_seed = self.random_state.randint(1, np.iinfo(np.uint32).max)
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             # A.S. Borlaff - NASA/Ames, Feb 16 2024. 
             # Adding a randomized temporary name to the image_trace and parameter_trace files 
             # So the do not overlap if multiple LIRAs are launched in parallel. 
