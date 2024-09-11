@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <time.h>
 #include <iostream>
-
+#include <iomanip> // Include for std::setw
 #define verbose 3         /* interger 0 to 10, higher more output to screen */
 #define convg_em 1e-6     /* convergence criterion for EM */
 #define convg_nr 1e-8     /* convergence criterion for Newton-Raphson */
@@ -20,6 +20,27 @@
 #define FREE_ARG char*
 #define PAR_NOT_SET -42
 //#define DEBUG 0
+
+// Adding a progress bar. See https://stackoverflow.com/questions/14539867/how-to-display-a-progress-indicator-in-pure-c-c-cout-printf
+#include <iostream>
+#include <chrono>
+
+#define PBSTR "████████████████████████████████████████████████████████████████████████████████████████████████████"
+#define PBWIDTH 100
+
+void printProgress(double percentage, std::chrono::steady_clock::time_point start_time) {
+    int val = (int) (percentage * 100);
+    int lpad = (int) (percentage * PBWIDTH);
+    int rpad = PBWIDTH - lpad;
+    
+    auto elapsed_time = std::chrono::steady_clock::now() - start_time;
+    auto estimated_total_time = std::chrono::duration<double>(elapsed_time) / percentage;
+    auto estimated_remaining_time = estimated_total_time - elapsed_time;
+    int seconds = std::chrono::duration_cast<std::chrono::seconds>(estimated_remaining_time).count();
+
+    std::cout << "\r" << std::setw(3) << val << "% [" << std::string(lpad, '=') << ">" << std::string(rpad, ' ') << "] ";
+    std::cout << "Time left: " << seconds << "s" << std::flush;
+}
 
 /***************************************************************/
 /************************* DATA STRUCTURES *********************/
@@ -1627,6 +1648,7 @@ void bayes_image_analysis(double* outmap, double* post_mean, char* out_file_nm,
                           expmapType* expmap, cntType* obs, cntType* deblur,
                           cntType* src, cntType* bkg, mrfType* mrf, msType* ms,
                           llikeType* llike, scalemodelType* bkg_scale, unsigned int random_seed) {
+    
   FILE* out_file; /* the output file */
   if (!(out_file = fopen(out_file_nm, "w"))) c_error("Could not open the OUTPUT file");
 
@@ -1661,6 +1683,9 @@ void bayes_image_analysis(double* outmap, double* post_mean, char* out_file_nm,
   for (cont->iter = 1; cont->iter <= cont->max_iter; cont->iter++) {
     if (verbose > 1 && (cont->iter % cont->save_thin == 0)) {
       // printf_d("ITERATION NUMBER %d.\n", cont->iter);
+      float progress_fraction = (float)cont->iter / (float)cont->max_iter;
+      std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
+      printProgress(progress_fraction,start_time);
       fprintf(param_file, "\n%d ", cont->iter);
     }
 
