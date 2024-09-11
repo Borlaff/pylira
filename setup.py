@@ -100,7 +100,7 @@ ext_modules = [
         name="_lira",
         sources=sources,
         include_dirs=include_dirs,
-        libraries=[],
+        libraries=["Rmath"],
         library_dirs=library_dirs,
     ),
 ]

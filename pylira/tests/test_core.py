@@ -84,20 +84,6 @@ def test_lira_deconvolver_run_point_source(lira_result):
     assert_allclose(np.mean(trace_par["smoothingParam4"][idx]), 0.070, rtol=0.1)
 
 
-def test_reduce_write_read(tmpdir, lira_result):
-    filename = tmpdir / "reduced.fits"
-    lira_result.reduce_to_mean_std().write(filename)
-
-    reduced = LIRADeconvolverResult.read(filename)
-
-    assert_allclose(
-        lira_result.posterior_mean_from_trace, reduced.posterior_mean, rtol=1e-5
-    )
-    assert_allclose(
-        lira_result.posterior_std_from_trace, reduced.posterior_std, rtol=1e-5
-    )
-
-
 @pytest.mark.xfail
 # TODO: make LIRA work for extended sources...
 def test_lira_deconvolver_run_disk_source(tmpdir):

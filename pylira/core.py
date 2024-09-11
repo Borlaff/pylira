@@ -1,5 +1,4 @@
 import os
-import random
 import tempfile
 from copy import deepcopy
 from pathlib import Path
@@ -19,7 +18,6 @@ from .utils.plot import (
     plot_pixel_trace,
     plot_pixel_trace_neighbours,
 )
-import string
 
 DTYPE_DEFAULT = np.float64
 
@@ -174,13 +172,9 @@ class LIRADeconvolver:
 
         random_seed = self.random_state.randint(1, np.iinfo(np.uint32).max)
 
-        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
-            # A.S. Borlaff - NASA/Ames, Feb 16 2024. 
-            # Adding a randomized temporary name to the image_trace and parameter_trace files 
-            # So the do not overlap if multiple LIRAs are launched in parallel. 
-            random_code_string = ''.join(random.choices(string.ascii_uppercase, k=10))
-            filename_image_trace = str(os.path.join(tmpdir, "image-trace_"+ random_code_string +".txt"))
-            filename_parameter_trace = str(os.path.join(tmpdir, "parameter-trace_" + random_code_string + ".txt"))
+        with tempfile.TemporaryDirectory() as tmpdir:
+            filename_image_trace = str(os.path.join(tmpdir, "image-trace.tx"))
+            filename_parameter_trace = str(os.path.join(tmpdir, "parameter-trace.txt"))
 
             posterior_mean = image_analysis(
                 observed_im=data["counts"],
@@ -213,12 +207,8 @@ class LIRADeconvolver:
 
         config = self.to_dict()
         config["random_seed"] = random_seed
-
-        posterior_std = np.nanstd(image_trace[self.n_burn_in :], axis=0)
-
         return LIRADeconvolverResult(
             posterior_mean=posterior_mean,
-            posterior_std=posterior_std,
             parameter_trace=parameter_trace,
             image_trace=image_trace,
             config=config,
@@ -234,8 +224,6 @@ class LIRADeconvolverResult:
         Configuration from the `LIRADeconvolver`
     posterior_mean : `~numpy.ndarray`
         Posterior mean
-    posterior_std : `~numpy.ndarray`
-        Posterior standard deviation
     parameter_trace : `~astropy.table.Table` or dict
         Parameter trace. If a dict is provided it triggers the lazy loading.
         The dict must contain the argument to `read_parameter_trace_file`.
@@ -250,14 +238,12 @@ class LIRADeconvolverResult:
         self,
         config,
         posterior_mean=None,
-        posterior_std=None,
         parameter_trace=None,
         image_trace=None,
         wcs=None,
     ):
         self._config = config
         self._posterior_mean = posterior_mean
-        self._posterior_std = posterior_std
         self._wcs = wcs
         self._image_trace = image_trace
         self._parameter_trace = parameter_trace
@@ -300,25 +286,9 @@ class LIRADeconvolverResult:
         return self._posterior_mean
 
     @property
-    def posterior_std(self):
-        """Posterior standard deviation (`~numpy.ndarray`)"""
-        return self._posterior_std
-
-    @property
     def posterior_mean_from_trace(self):
         """Posterior mean computed from trace(`~numpy.ndarray`)"""
-        if self.image_trace is None:
-            raise ValueError("No image trace available.")
-
         return np.nanmean(self.image_trace[self.n_burn_in :], axis=0)
-
-    @property
-    def posterior_std_from_trace(self):
-        """Posterior std computed from trace(`~numpy.ndarray`)"""
-        if self.image_trace is None:
-            raise ValueError("No image trace available.")
-
-        return np.nanstd(self.image_trace[self.n_burn_in :], axis=0)
 
     @property
     def image_trace(self):
@@ -399,9 +369,6 @@ class LIRADeconvolverResult:
         **kwargs : dict
             Keyword arguments forwarded to `plot_pixel_trace`
         """
-        if self.image_trace is None:
-            raise ValueError("No image trace available.")
-
         if center_pix is None:
             # choose center as default
             center_pix = tuple(np.array(self.posterior_mean.shape) // 2)
@@ -425,9 +392,6 @@ class LIRADeconvolverResult:
         **kwargs : dict
             Keyword arguments forwarded to `~matplotlib.pyplot.plot`
         """
-        if self.image_trace is None:
-            raise ValueError("No image trace available.")
-
         if center_pix is None:
             # choose center as default
             center_pix = tuple(np.array(self.posterior_mean.shape) // 2)
@@ -470,9 +434,6 @@ class LIRADeconvolverResult:
         **kwargs : dict
             Keyword arguments forwarded to `~matplotlib.pyplot.imshow`
         """
-        if self.image_trace is None:
-            raise ValueError("No image trace available.")
-
         import matplotlib.pyplot as plt
         from ipywidgets import IntSlider
         from ipywidgets.widgets.interaction import interact
@@ -529,9 +490,6 @@ class LIRADeconvolverResult:
         anim : `~matplotlib.animation.FuncAnimation`
             Func animation object.
         """
-        if self.image_trace is None:
-            raise ValueError("No image trace available.")
-
         import matplotlib.pyplot as plt
         from matplotlib.animation import FuncAnimation
 
@@ -638,22 +596,6 @@ class LIRADeconvolverResult:
         reader = IO_FORMATS_READ[format]
         kwargs = reader(filename=filename)
         return cls(**kwargs)
-
-    def reduce_to_mean_std(self):
-        """Reduce to mean and std
-
-        Returns
-        -------
-        result : `~LIRADeconvolverResult`
-            Reduced result object
-        """
-        return self.__class__(
-            config=deepcopy(self.config),
-            posterior_mean=self.posterior_mean_from_trace,
-            posterior_std=self.posterior_std_from_trace,
-            wcs=deepcopy(self.wcs),
-            parameter_trace=deepcopy(self.parameter_trace),
-        )
 
 
 class LIRASignificanceEstimator:
