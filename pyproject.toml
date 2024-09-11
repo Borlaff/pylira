@@ -6,9 +6,3 @@ requires = ["setuptools",
             "pybind11"]
 
 build-backend = 'setuptools.build_meta'
-
-[project]
-# version = "0.0.1"  # Remove any existing version parameter.
-dynamic = ["version"]
-
-[tool.setuptools_scm]
